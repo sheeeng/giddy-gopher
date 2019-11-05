@@ -28,22 +28,6 @@ func rootEndpoint(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Hit rootEndpoint ")
 }
 
-func returnAllArticles(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Endpoint Hit: returnAllArticles")
-	json.NewEncoder(w).Encode(Articles)
-}
-
-func returnSingleArticle(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	key := vars["id"]
-
-	for _, article := range Articles {
-		if article.ID == key {
-			json.NewEncoder(w).Encode(article)
-		}
-	}
-}
-
 func createArticle(w http.ResponseWriter, r *http.Request) {
 	// get the body of our POST request
 	// unmarshal this into a new Article struct
@@ -66,7 +50,57 @@ func createArticle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(article)
 }
 
+func readArticles(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: readArticles")
+	json.NewEncoder(w).Encode(Articles)
+}
+
+func readArticle(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: readArticle")
+	vars := mux.Vars(r)
+	key := vars["id"]
+
+	for _, article := range Articles {
+		if article.ID == key {
+			json.NewEncoder(w).Encode(article)
+		}
+	}
+}
+
+func updateArticle(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: updateArticle")
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	var revisedArticle Article
+	if body, err := ioutil.ReadAll(r.Body); err == nil {
+		if err := json.Unmarshal([]byte(body), &revisedArticle); err != nil {
+
+		}
+	}
+	// log.Printf("revisedArticle: [%v] ....\n", revisedArticle)
+
+	for index, articleItem := range Articles {
+		if articleItem.ID == id {
+			// log.Printf("Article ID [%v] exist at [%v] index....\n", id, index)
+			// log.Printf("Article Details: [%v] [%v] [%v] [%v]....\n", articleItem.ID, articleItem.Title, articleItem.Description, articleItem.Content)
+			if revisedArticle.Title != "" {
+				Articles[index].Title = revisedArticle.Title
+			}
+			if revisedArticle.Description != "" {
+				Articles[index].Description = revisedArticle.Description
+			}
+			if revisedArticle.Content != "" {
+				Articles[index].Content = revisedArticle.Content
+			}
+			break
+		}
+	}
+	json.NewEncoder(w).Encode(vars)
+}
+
 func deleteArticle(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: deleteArticle")
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -80,10 +114,12 @@ func deleteArticle(w http.ResponseWriter, r *http.Request) {
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", rootEndpoint)
-	myRouter.HandleFunc("/articles", returnAllArticles)
 	myRouter.HandleFunc("/article", createArticle).Methods("POST")
+	myRouter.HandleFunc("/articles", readArticles).Methods("GET")
+	myRouter.HandleFunc("/article/{id}", readArticle).Methods("GET")
+	myRouter.HandleFunc("/article/{id}", updateArticle).Methods("PUT")
 	myRouter.HandleFunc("/article/{id}", deleteArticle).Methods("DELETE")
-	myRouter.HandleFunc("/article/{id}", returnSingleArticle)
+
 	log.Fatal(http.ListenAndServe(":65535", myRouter))
 }
 

@@ -27,19 +27,9 @@ echo "------------------------------------------------------------------------"
 
 curl \
     "${CURL_OPTIONS[@]/#/--}" \
-    --request GET \
-    "${REST_API_ROOT_URL}/article/42" \
-    | \
-    jq
-
-echo
-
-curl \
-    "${CURL_OPTIONS[@]/#/--}" \
-    --request GET \
-    "${REST_API_ROOT_URL}/articles" \
-    | \
-    jq
-    # python -m json.tool
+    --data "$(cat ${SCRIPT_DIR}/updatedArticle.json)" \
+    --header "Content-Type: application/json" \
+    --request PUT \
+    "${REST_API_ROOT_URL}/article/42"
 
 echo "------------------------------------------------------------------------"
